@@ -1,61 +1,66 @@
 from PIL import Image
-from numpy import matrix
-import random
+from methods import divide_to_particles, get_rgb_values, get_rgb_matrixes, get_zero_layer_weights_matrix
 
-ALPHA = 0.00001
-MAX_ERROR = 0.0001
 
-image = Image.open("1.png").convert("RGB")
+ALPHA = 0.001
+image = Image.open("Kwame_Raoul_Expr.png").convert("RGB")
 image_size = image.size
 pixels = image.getdata()
-
 newData = []
-red = []
-green = []
-blue = []
-for pixel in pixels:
-    r, g, b = pixel
-    red.append(r)
-    green.append(g)
-    blue.append(b)
+for x in pixels:
+    newData.append((0, 0, 0))
 
-red_input_matrix = matrix(red)
-green_input_matrix = matrix(green)
-blue_input_matrix = matrix(blue)
 
-zero_layer_neurons_number = len(red or green or blue)
-first_layer_neurons_number = len(red or green or blue)/2
+image_particles = divide_to_particles(pixels)
 
-zero_layer_weights = []
-for i in range(zero_layer_neurons_number):
-    neuron_weights = []
-    for j in range(first_layer_neurons_number):
-        neuron_weights.append(random.uniform(-1, 1))
-    zero_layer_weights.append(neuron_weights)
+rgb_values = get_rgb_values(image_particles)
 
-zero_layer_weights_matrix = matrix(zero_layer_weights)
-first_layer_weights_matrix = zero_layer_weights_matrix.H
+rgb_matrixes = get_rgb_matrixes(rgb_values)
 
-first_layer_output_values = red_input_matrix*zero_layer_weights_matrix
-#print(first_layer_output_values)
-#print(first_layer_weights_matrix)
-output_values = first_layer_output_values*first_layer_weights_matrix
-#print(output_values)
-delta_values_matrix = output_values-red_input_matrix
-#print(delta_values_matrix)
+for color in ['red', 'green', 'blue']:
+    matrix_iteration = 0
+    for rgb_matrix in rgb_matrixes:
+        zero_layer_neurons_number = rgb_matrix[color].size
+        first_layer_neurons_number = 10
+        zero_layer_weights_matrix = get_zero_layer_weights_matrix(zero_layer_neurons_number, first_layer_neurons_number)
+        first_layer_weights_matrix = zero_layer_weights_matrix.H
 
-corrected_first_layer_weights_matrix = first_layer_weights_matrix - ALPHA*first_layer_output_values.H*delta_values_matrix
-print(first_layer_weights_matrix)
-print(corrected_first_layer_weights_matrix)
+        # START CYCLE
+        while True:
+            first_layer_output_values = rgb_matrix[color]*zero_layer_weights_matrix
+            second_layer_output_values = first_layer_output_values*first_layer_weights_matrix
 
-corrected_zero_layer_weights_matrix = zero_layer_weights_matrix - ALPHA*red_input_matrix.H*delta_values_matrix*corrected_first_layer_weights_matrix.H
+            delta_values_matrix = second_layer_output_values-rgb_matrix[color]
 
-print(corrected_zero_layer_weights_matrix)
+            corrected_first_layer_weights_matrix = first_layer_weights_matrix - \
+                                                   ALPHA*first_layer_output_values.H*delta_values_matrix
+            corrected_zero_layer_weights_matrix = zero_layer_weights_matrix - \
+                                                  ALPHA*rgb_matrix[color].H * \
+                                                  delta_values_matrix*corrected_first_layer_weights_matrix.H
 
-MAX_ERROR = 0.0001*first_layer_neurons_number
+            MAX_ERROR = 0.1*first_layer_neurons_number
+            mean_square_error = delta_values_matrix*delta_values_matrix.H
 
-#mean_square_error = delta_values_matrix*delta_values_matrix
-#print(mean_square_error)
+            if mean_square_error < MAX_ERROR:
+                print(matrix_iteration)
+                new_data_iteration = 0
+                for r, g, b in newData[matrix_iteration*5:(matrix_iteration+1)*5]:
+                    changed_color_value = second_layer_output_values.flat[new_data_iteration]
+                    changed_color_value = int((changed_color_value + 1) * 255 / 2)
+                    if color is 'red':
+                        newData[matrix_iteration * 5 + new_data_iteration] = changed_color_value, g, b
+                    elif color is 'green':
+                        newData[matrix_iteration * 5 + new_data_iteration] = r, changed_color_value, b
+                    elif color is 'blue':
+                        newData[matrix_iteration * 5 + new_data_iteration] = r, g, changed_color_value
+
+                    new_data_iteration += 1
+
+                matrix_iteration += 1
+                break
+            else:
+                zero_layer_weights_matrix = corrected_zero_layer_weights_matrix
+                first_layer_weights_matrix = corrected_first_layer_weights_matrix
 
 image.putdata(newData)
 image.save('out.jpg')
