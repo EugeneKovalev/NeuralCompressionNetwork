@@ -2,12 +2,25 @@ from numpy import matrix
 import random
 
 
-def divide_to_particles(pixels):
+def divide_to_particles(image_size, pixels):
     particles = []
     particle = []
+
+    #k, v = image_size
+    """
+    for i in range(0, k):
+        particle.append(pixels[i])
+        if (i+1) % 2 == 0:
+            particle.append(pixels[k+i])
+            particle.append(pixels[k+i+1])
+            particles.append(particle)
+            particle = []
+        print i
+    """
+
     for i in range(0, len(pixels)):
         particle.append(pixels[i])
-        if (i+1) % 5 == 0:
+        if (i+1) % 2 == 0: #Five
             particles.append(particle)
             particle = []
     return particles
