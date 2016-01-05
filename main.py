@@ -2,7 +2,7 @@ from PIL import Image
 from methods import divide_to_particles, get_rgb_values, get_rgb_matrixes, get_zero_layer_weights_matrix
 
 
-image = Image.open("Test_Image.png").convert("RGB")
+image = Image.open("Test_Image8px.png").convert("RGB")
 image_size = image.size
 pixels = image.getdata()
 newData = []
@@ -16,8 +16,10 @@ rgb_values = get_rgb_values(image_particles)
 
 rgb_matrixes = get_rgb_matrixes(rgb_values)
 
-first_layer_neurons_number = input('Enter the number of neurons in the first layer: ')
+print(rgb_matrixes)
 
+#first_layer_neurons_number = input('Enter the number of neurons in the first layer: ')
+first_layer_neurons_number = 2
 for color in ['red', 'green', 'blue']:
     matrix_iteration = 0
     print color
@@ -60,10 +62,11 @@ for color in ['red', 'green', 'blue']:
                                                   ALPHA*rgb_matrix[color].H * \
                                                   delta_values_matrix*first_layer_weights_matrix.H
 
-            MAX_ERROR = 0.1*first_layer_neurons_number
+            MAX_ERROR = 0.01*first_layer_neurons_number
             mean_square_error = delta_values_matrix*delta_values_matrix.H
-
+            print('max error', mean_square_error, ' < ', MAX_ERROR)
             if mean_square_error < MAX_ERROR:
+                print('MAX ERROR', mean_square_error, ' < ', MAX_ERROR)
                 print(matrix_iteration, "====================================")
                 new_data_iteration = 0
                 for r, g, b in newData[matrix_iteration*2:(matrix_iteration+1)*2]: #FIVE

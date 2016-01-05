@@ -5,24 +5,15 @@ import random
 def divide_to_particles(image_size, pixels):
     particles = []
     particle = []
-
-    #k, v = image_size
-    """
-    for i in range(0, k):
-        particle.append(pixels[i])
-        if (i+1) % 2 == 0:
-            particle.append(pixels[k+i])
-            particle.append(pixels[k+i+1])
-            particles.append(particle)
-            particle = []
-        print i
-    """
-
-    for i in range(0, len(pixels)):
-        particle.append(pixels[i])
-        if (i+1) % 2 == 0: #Five
-            particles.append(particle)
-            particle = []
+    k, v = image_size
+    for j in range(0, v, 2):
+        for i in range(k*j, k*(j+1)):
+            particle.append(pixels[i])
+            if (i+1) % 2 == 0:
+                particle.append(pixels[k+i-1])
+                particle.append(pixels[k+i])
+                particles.append(particle)
+                particle = []
     return particles
 
 
