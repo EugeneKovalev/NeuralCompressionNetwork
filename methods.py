@@ -48,3 +48,20 @@ def get_zero_layer_weights_matrix(zero_layer_neurons_number, first_layer_neurons
             neuron_weights.append(round(random.uniform(0, 1), 4))
         zero_layer_weights.append(neuron_weights)
     return matrix(zero_layer_weights)
+
+
+def get_alpha(matrix):
+    values_to_be_squared = 0
+    for i in matrix.tolist()[0]:
+        values_to_be_squared += i*i
+    return 1/values_to_be_squared
+
+def get_green_output_values(green_values, zero_layer_weights):
+    first_layer_output_values = green_values*zero_layer_weights
+    first_layer_weights_matrix = zero_layer_weights.H
+    return first_layer_output_values*first_layer_weights_matrix
+
+def get_blue_output_values(blue_values, zero_layer_weights):
+    first_layer_output_values = blue_values*zero_layer_weights
+    first_layer_weights_matrix = zero_layer_weights.H
+    return first_layer_output_values*first_layer_weights_matrix
