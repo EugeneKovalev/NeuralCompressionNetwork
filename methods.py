@@ -63,6 +63,32 @@ def get_color_output_values(color_values, zero_layer_weights):
     return first_layer_output_values*first_layer_weights_matrix
 
 
+def get_new_rgb_values(rgb_matrixes, RED_zero_layer_weights, RED_first_layer_weights,
+                                     GREEN_zero_layer_weights, GREEN_first_layer_weights,
+                                     BLUE_zero_layer_weights, BLUE_first_layer_weights):
+    new_rgb_values = {'red': [], 'green': [], 'blue': []}
+    for rgb_matrix in rgb_matrixes:
+        RED_latent_layer = rgb_matrix['red'] * RED_zero_layer_weights
+        RED_output_layer = RED_latent_layer * RED_first_layer_weights
+        GREEN_latent_layer = rgb_matrix['green'] * GREEN_zero_layer_weights
+        GREEN_output_layer = GREEN_latent_layer * GREEN_first_layer_weights
+        BLUE_latent_layer = rgb_matrix['blue'] * BLUE_zero_layer_weights
+        BLUE_output_layer = BLUE_latent_layer * BLUE_first_layer_weights
+        red_list = []
+        for r in list(RED_output_layer.flat):
+            red_list.append(int((r + 1) * 255 / 2))
+        green_list = []
+        for g in list(GREEN_output_layer.flat):
+            green_list.append(int((g + 1) * 255 / 2))
+        blue_list = []
+        for b in list(BLUE_output_layer.flat):
+            blue_list.append(int((b + 1) * 255 / 2))
+        new_rgb_values['red'].append(red_list)
+        new_rgb_values['green'].append(green_list)
+        new_rgb_values['blue'].append(blue_list)
+    return new_rgb_values
+
+
 def process_teaching_for_color(MAX_ERROR, first_layer_neurons_number, rgb_matrixes, color):
     zero_layer_neurons_number = rgb_matrixes[0]['red'].size
 
@@ -73,7 +99,6 @@ def process_teaching_for_color(MAX_ERROR, first_layer_neurons_number, rgb_matrix
     error_iteration = 0
     while mean_square_error > MAX_ERROR:
         matrix_iteration = 0
-        list_of_delta_matrixes = []
         for rgb_matrix in rgb_matrixes:
 
             if error_iteration == 0:
@@ -103,7 +128,6 @@ def process_teaching_for_color(MAX_ERROR, first_layer_neurons_number, rgb_matrix
             corrected_zero_layer_weights_matrix = zero_layer_weights_matrix - \
                                                   ALPHA * rgb_matrix[color].H * \
                                                   delta_values_matrix * first_layer_weights_matrix.H
-            list_of_delta_matrixes.append(delta_values_matrix)
 
             corrected_weights = {'zero_layer': corrected_zero_layer_weights_matrix,
                                          'first_layer': corrected_first_layer_weights_matrix}
@@ -122,8 +146,12 @@ def process_teaching_for_color(MAX_ERROR, first_layer_neurons_number, rgb_matrix
             matrix_iteration += 1
 
         mean_square_error = 0
-        for delta_matrix in list_of_delta_matrixes:
-            mean_square_error += delta_matrix * delta_matrix.H
+
+        for rgb_matrix in rgb_matrixes:
+            first_layer_output_values = rgb_matrix[color] * corrected_zero_layer_weights_matrix
+            second_layer_output_values = first_layer_output_values * corrected_first_layer_weights_matrix
+            delta_values_matrix = second_layer_output_values - rgb_matrix[color]
+            mean_square_error += delta_values_matrix * delta_values_matrix.H
 
         print('MSE ', mean_square_error)
         print(error_iteration)
